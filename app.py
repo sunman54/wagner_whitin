@@ -110,8 +110,13 @@ class WagnerWhitinApp:
         ttk.Label(output_frame, text="Optimal Cost:").grid(column=0, row=0, sticky=tk.W)
         ttk.Label(output_frame, textvariable=self.optimal_cost_var).grid(column=1, row=0, padx=10, pady=5)
 
-        ttk.Label(output_frame, text="Optimal Solution (Order Quantities):").grid(column=0, row=1, sticky=tk.W)
-        ttk.Label(output_frame, textvariable=self.optimal_solution_var).grid(column=1, row=1, padx=10, pady=5)
+        ttk.Label(output_frame, text="Optimal Solution:").grid(column=0, row=1, sticky=tk.W)
+        self.optimal_solution_tree = ttk.Treeview(output_frame, columns=["Month", "Solution"], show="headings")
+        self.optimal_solution_tree.column("Month", width=50, anchor=tk.CENTER)
+        self.optimal_solution_tree.column("Solution", width=150, anchor=tk.CENTER)
+        self.optimal_solution_tree.heading("Month", text="Month")
+        self.optimal_solution_tree.heading("Solution", text="Solution")
+        self.optimal_solution_tree.grid(column=1, row=1, padx=10, pady=5)
 
     def create_solve_button(self):
         solve_button = ttk.Button(self.root, text="Solve", command=self.solve)
@@ -136,9 +141,20 @@ class WagnerWhitinApp:
 
             # Display the result
             self.optimal_cost_var.set(result["cost"])
-            self.optimal_solution_var.set(result["solution"])
+
+            # Update the optimal solution table
+            self.update_optimal_solution_table(result["solution"])
         except (ValueError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
             tk.messagebox.showerror("Error", f"Invalid input. {str(e)}")
+
+    def update_optimal_solution_table(self, solution):
+        # Clear the existing items in the treeview
+        for item in self.optimal_solution_tree.get_children():
+            self.optimal_solution_tree.delete(item)
+
+        # Insert new data into the treeview
+        for month, quantity in enumerate(solution, start=1):
+            self.optimal_solution_tree.insert("", "end", values=(month, quantity))
 
 def read_excel(excel_file_path):
 
@@ -147,6 +163,7 @@ def read_excel(excel_file_path):
     order_list = list(df['Talep'])
 
     return order_list
+
 
 
 
