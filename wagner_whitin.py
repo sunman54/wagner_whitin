@@ -104,8 +104,8 @@ def evaluate(demands, order_costs, holding_costs, solution):
 
 if __name__ == "__main__":
 
-    demands         =   [50, 60, 90, 70, 30, 100, 60, 40, 80 ,20]
-    order_costs     = len(demands) * [300]
+    demands       =   [50, 60, 90, 70, 30, 100, 60, 40, 80 ,20]
+    order_costs   = len(demands) * [300]
     holding_costs = len(demands) * [1]
 
     # Run the Wagner-Whitin algorithm
