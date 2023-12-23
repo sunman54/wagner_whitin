@@ -1,5 +1,6 @@
+import pandas as pd
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 from collections import namedtuple
 
 # Define a namedtuple for the constants
@@ -71,7 +72,7 @@ class WagnerWhitinApp:
         self.root.title("Wagner-Whitin Solver")
 
         # Input variables
-        self.demands_var = tk.StringVar()
+        self.demands_file_path_var = tk.StringVar()
         self.order_cost_var = tk.IntVar(value=300)
         self.holding_cost_var = tk.IntVar(value=1)
 
@@ -92,8 +93,9 @@ class WagnerWhitinApp:
         input_frame = ttk.Frame(self.root, padding=(10, 10, 10, 10))
         input_frame.grid(column=0, row=0, padx=10, pady=10)
 
-        ttk.Label(input_frame, text="Demands (comma-separated):").grid(column=0, row=0, sticky=tk.W)
-        ttk.Entry(input_frame, textvariable=self.demands_var).grid(column=1, row=0, padx=10, pady=5)
+        ttk.Label(input_frame, text="Demands File:").grid(column=0, row=0, sticky=tk.W)
+        ttk.Entry(input_frame, textvariable=self.demands_file_path_var, state='readonly').grid(column=1, row=0, padx=10, pady=5)
+        ttk.Button(input_frame, text="Choose File", command=self.choose_file).grid(column=2, row=0, padx=10, pady=5)
 
         ttk.Label(input_frame, text="Order Cost:").grid(column=0, row=1, sticky=tk.W)
         ttk.Entry(input_frame, textvariable=self.order_cost_var).grid(column=1, row=1, padx=10, pady=5)
@@ -115,22 +117,38 @@ class WagnerWhitinApp:
         solve_button = ttk.Button(self.root, text="Solve", command=self.solve)
         solve_button.grid(column=0, row=2, pady=10)
 
+    def choose_file(self):
+        file_path = filedialog.askopenfilename(title="Choose a file", filetypes=[("Excel Files", "*.xlsx"), ("All Files", "*.*")])
+        if file_path:
+            self.demands_file_path_var.set(file_path)
+
     def solve(self):
         try:
-            demands = list(map(int, self.demands_var.get().split(',')))
+            file_path = self.demands_file_path_var.get()
+            order_list = read_excel(file_path)
             order_cost = self.order_cost_var.get()
             holding_cost = self.holding_cost_var.get()
 
             constants = Constants(order_cost, holding_cost)
 
             # Run the Wagner-Whitin algorithm
-            result = wagner_whitin(demands, constants)
+            result = wagner_whitin(order_list, constants)
 
             # Display the result
             self.optimal_cost_var.set(result["cost"])
             self.optimal_solution_var.set(result["solution"])
-        except ValueError:
-            tk.messagebox.showerror("Error", "Invalid input. Please enter valid integers separated by commas.")
+        except (ValueError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
+            tk.messagebox.showerror("Error", f"Invalid input. {str(e)}")
+
+def read_excel(excel_file_path):
+
+    df = pd.read_excel(excel_file_path)
+
+    order_list = list(df['Talep'])
+
+    return order_list
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()
